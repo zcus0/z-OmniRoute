@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { api, setToken } from "../api/client";
+import OmniRouteLogo from "../components/OmniRouteLogo";
 
 export function Login({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState("");
@@ -27,7 +28,12 @@ export function Login({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="login-wrap">
       <form className="card login-card" onSubmit={submit}>
-        <h2>OmniRoute</h2>
+        <h2>
+          <span className="logo-mark">
+            <OmniRouteLogo size={18} />
+          </span>
+          OmniRoute
+        </h2>
         <p className="muted">Sign in to the management API.</p>
         <input
           type="password"
@@ -36,7 +42,11 @@ export function Login({ onLogin }: { onLogin: () => void }) {
           onChange={(e) => setPassword(e.target.value)}
           autoFocus
         />
-        {error && <p className="error">{error}</p>}
+        {error && (
+          <p className="error" style={{ margin: "10px 0 0", fontSize: 13 }}>
+            {error}
+          </p>
+        )}
         <button type="submit" disabled={busy || !password} style={{ marginTop: 12, width: "100%" }}>
           {busy ? "Signing in…" : "Sign in"}
         </button>
