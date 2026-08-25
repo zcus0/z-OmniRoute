@@ -14,6 +14,15 @@ import {
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const distDir = process.env.NEXT_DIST_DIR || ".build/next";
 const projectRoot = dirname(fileURLToPath(import.meta.url));
+// Monorepo layout: node_modules is hoisted to the workspace root (backend/../).
+// Turbopack refuses to resolve outside turbopack.root, so when `next` lives in
+// the parent workspace root, widen the root to include it. Standalone/Docker
+// layouts keep projectRoot (node_modules sits beside next.config.mjs).
+import { existsSync } from "node:fs";
+const hoistedRoot = dirname(projectRoot);
+const turbopackRoot = existsSync(hoistedRoot + "/node_modules/next/package.json")
+  ? hoistedRoot
+  : projectRoot;
 const scriptSrc =
   process.env.NODE_ENV === "development"
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://static.cloudflareinsights.com"
@@ -130,7 +139,7 @@ const nextConfig = {
   distDir,
   // Turbopack config: redirect native modules to stubs at build time
   turbopack: {
-    root: projectRoot,
+    root: turbopackRoot,
     resolveAlias: {
       // @/mitm/manager → stub ONLY where the runtime can't run the MITM stack
       // (Docker sets OMNIROUTE_MITM_STUB=1 — #3390 graceful degradation). The
@@ -235,7 +244,7 @@ const nextConfig = {
       "next-intl",
     ],
   },
-  outputFileTracingRoot: projectRoot,
+  outputFileTracingRoot: turbopackRoot,
   outputFileTracingIncludes: {
     // Migration SQL and compression rule/filter JSON files are read via fs at
     // runtime and are NOT always auto-traced by webpack/turbopack.

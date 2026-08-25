@@ -12,7 +12,9 @@
     "node": ">=22.22.2 <23 || >=24.0.0 <27"
   },
   "scripts": {
-    "dev": "npm run dev --workspace backend",
+    "dev": "npm run backend & npm run frontend & wait",
+    "backend": "PORT=3001 npm run dev --workspace backend",
+    "frontend": "npm run dev --workspace frontend",
     "build": "npm run build --workspace backend",
     "build:backend": "npm run build:backend --workspace backend",
     "start": "npm run start --workspace backend",
