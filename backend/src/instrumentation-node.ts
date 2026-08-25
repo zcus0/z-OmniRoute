@@ -543,12 +543,17 @@ export async function registerNodejs(): Promise<void> {
           console.warn("[STARTUP] Embedded services bootstrap failed (non-fatal):", msg);
         }),
 
-      import("@/lib/services/embedWsProxy")
-        .then((m) => m.initEmbedWsProxy())
-        .catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.warn("[STARTUP] Embed WS proxy failed to start (non-fatal):", msg);
-        }),
+      // Embed WS proxy (port 20131): binds a singleton TCP listener owned by
+      // the API process. Skipped when background services are disabled
+      // (secondary processes, e.g. the UI-only Next server behind
+      // OMNIROUTE_UI_PROXY) so it never fights the owner for the port.
+      (isBackgroundServicesDisabled()
+        ? Promise.resolve()
+        : import("@/lib/services/embedWsProxy").then((m) => m.initEmbedWsProxy())
+      ).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn("[STARTUP] Embed WS proxy failed to start (non-fatal):", msg);
+      }),
 
       import("@omniroute/open-sse/services/autoRefreshDaemon")
         .then((m) => m.autoRefreshDaemon.start())
@@ -679,18 +684,22 @@ export async function registerNodejs(): Promise<void> {
 
       // Real-time dashboard WebSocket daemon (port 20132): powers Combo Studio Live,
       // the Home live-pulse, and Live Compression. Side-effect import triggers the
-      // flag-gated auto-start (OMNIROUTE_ENABLE_LIVE_WS, default ON).
-      import("@/server/ws/liveServer")
-        .then(() => {
-          console.log("[STARTUP] Live dashboard WebSocket daemon bootstrap invoked");
-        })
-        .catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.warn(
-            "[STARTUP] Live dashboard WebSocket daemon failed to start (non-fatal):",
-            msg
-          );
-        }),
+      // flag-gated auto-start (OMNIROUTE_ENABLE_LIVE_WS, default ON). Skipped when
+      // background services are disabled (secondary processes, e.g. the UI-only
+      // Next server behind OMNIROUTE_UI_PROXY) — the browser dials the API
+      // process's listener directly on LIVE_WS_PORT.
+      (isBackgroundServicesDisabled()
+        ? Promise.resolve()
+        : import("@/server/ws/liveServer").then(() => {
+            console.log("[STARTUP] Live dashboard WebSocket daemon bootstrap invoked");
+          })
+      ).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(
+          "[STARTUP] Live dashboard WebSocket daemon failed to start (non-fatal):",
+          msg
+        );
+      }),
     ]);
   }
 

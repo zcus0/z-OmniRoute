@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs/promises";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -93,7 +93,15 @@ export function ensureWindowsBuildProfileDirs(env, mkdirImpl = mkdirSync) {
 
 function runNextBuild() {
   return new Promise((resolve) => {
-    const nextBin = path.join(projectRoot, "node_modules", "next", "dist", "bin", "next");
+    // Resolve the next binary from the local node_modules first, then the
+    // hoisted workspace root (npm/yarn/pnpm workspaces lift dependencies to
+    // <repo>/node_modules, so backend/node_modules/next may not exist).
+    const nextBinCandidates = [
+      path.join(projectRoot, "node_modules", "next", "dist", "bin", "next"),
+      path.join(projectRoot, "..", "node_modules", "next", "dist", "bin", "next"),
+    ];
+    const nextBin =
+      nextBinCandidates.find((candidate) => existsSync(candidate)) ?? nextBinCandidates[0];
     const buildEnv = resolveNextBuildEnv(process.env);
     ensureWindowsBuildProfileDirs(buildEnv);
     const nextArgs = process.versions.bun

@@ -61,6 +61,21 @@ for (const [key, value] of Object.entries(mergedEnv)) {
   }
 }
 
+// Frontend-only mode (OMNIROUTE_UI_PROXY): the standalone Express server owns
+// every singleton background service — LiveWS/embed WS listeners, sync and
+// cleanup schedulers. Booting them here too only yields EADDRINUSE noise and
+// duplicated daemons. Delegate unless the operator explicitly overrode it.
+if (
+  process.env.OMNIROUTE_UI_PROXY &&
+  !process.env.OMNIROUTE_DISABLE_BACKGROUND_SERVICES &&
+  mergedEnv.OMNIROUTE_DISABLE_BACKGROUND_SERVICES === undefined
+) {
+  process.env.OMNIROUTE_DISABLE_BACKGROUND_SERVICES = "true";
+  console.log(
+    "[ui-proxy] Background services delegated to the API server (OMNIROUTE_DISABLE_BACKGROUND_SERVICES=true)"
+  );
+}
+
 // systemd sd_notify (Type=notify / WatchdogSec=): this process owns the
 // watchdog pings — if its event loop blocks (freeze), the pings stop and
 // systemd kills the service. No-op outside systemd (no NOTIFY_SOCKET).

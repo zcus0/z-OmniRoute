@@ -1,5 +1,6 @@
 import createNextIntlPlugin from "next-intl/plugin";
 import { createMDX } from "fumadocs-mdx/next";
+import os from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { betterSqlite3AliasFor } from "./scripts/build/better-sqlite3-stub-flag.mjs";
@@ -324,7 +325,29 @@ const nextConfig = {
     "process",
   ],
   transpilePackages: ["@omniroute/open-sse", "@lobehub/icons", "fumadocs-ui", "fumadocs-core"],
-  allowedDevOrigins: ["localhost", "127.0.0.1", "192.168.0.250"],
+  // Dev-server origin allowlist: localhost plus every non-internal IPv4 of this
+  // machine, so opening the dashboard via a LAN/Tailscale IP (e.g. 100.x.y.z,
+  // 192.168.x.x) doesn't get its static chunks/HMR blocked by Next's
+  // cross-origin dev guard (#allowedDevOrigins). Extra hosts can be appended
+  // with OMNIROUTE_ALLOWED_DEV_ORIGINS="host1,host2".
+  allowedDevOrigins: [
+    "localhost",
+    "127.0.0.1",
+    ...(() => {
+      const origins = new Set();
+      for (const nets of Object.values(os.networkInterfaces())) {
+        for (const net of nets ?? []) {
+          if (!net || net.internal || net.family !== "IPv4" || !net.address) continue;
+          origins.add(net.address);
+        }
+      }
+      for (const extra of (process.env.OMNIROUTE_ALLOWED_DEV_ORIGINS ?? "").split(",")) {
+        const host = extra.trim();
+        if (host) origins.add(host);
+      }
+      return [...origins];
+    })(),
+  ],
   typescript: {
     // TODO: Re-enable after fixing all sub-component useTranslations scope issues
     ignoreBuildErrors: true,
