@@ -163,6 +163,25 @@ export async function createServer() {
 
   const routes = discoverRoutes();
 
+  // ponytail: standalone Express has no Next middleware (src/proxy.ts), so the
+  // authz pipeline never runs and ACAO is missing for browser SPA origins.
+  // Minimal parity: echo allowed origins via resolveAllowedOrigin (same
+  // allowlist as the pipeline). Full pipeline port when management routes are
+  // exposed remotely — upgrade path: run Next middleware in a sidecar.
+  const { resolveAllowedOrigin } = await importFromSrc("src/server/cors/origins.ts");
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      let allowed = resolveAllowedOrigin(origin);
+      if (!allowed && process.env.CORS_ALLOW_ALL === "true") allowed = origin;
+      if (allowed) {
+        res.setHeader("Access-Control-Allow-Origin", allowed);
+        res.setHeader("Vary", "Origin");
+      }
+    }
+    next();
+  });
+
   // Generic CORS preflight fallback for modules that don't export OPTIONS.
   const { CORS_HEADERS } = await importFromSrc("src/shared/utils/cors.ts");
   const mountedOptions = new Set();
