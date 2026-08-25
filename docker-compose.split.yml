@@ -1,0 +1,44 @@
+# OmniRoute decoupled deployment: headless backend + static SPA frontend.
+#
+#   docker compose -f docker-compose.split.yml up --build
+#
+# Backend: API-only image (dashboard pages stubbed at build time).
+# Frontend: nginx serving the SPA; calls backend via VITE_API_BASE baked at build.
+# Independently deployable — point frontend at any backend URL, scale/replace each
+# without touching the other.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "20128:20128"
+    environment:
+      # Required — generate: openssl rand -base64 48
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      API_KEY_SECRET: ${API_KEY_SECRET:-}
+      INITIAL_PASSWORD: ${INITIAL_PASSWORD:-CHANGEME}
+      # SPA origin allowed by CORS (csv). Use CORS_ALLOW_ALL=1 only for local dev.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-info}
+    volumes:
+      - omniroute-data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the SPA bundle at build time. Empty = same-origin (put a
+        # reverse proxy in front that routes /api and /v1 to the backend).
+        VITE_API_BASE: ${VITE_API_BASE:-}
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  omniroute-data:

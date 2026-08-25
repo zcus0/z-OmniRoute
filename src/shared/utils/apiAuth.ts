@@ -245,6 +245,15 @@ export async function isDashboardSessionAuthenticated(
     }
   }
 
+  // Decoupled SPA clients (frontend/) authenticate via Authorization header
+  // instead of cookies. Same JWT, same verification — no scope widening.
+  if (!token && requestHeaders) {
+    const authHeader = requestHeaders.get("authorization") || requestHeaders.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.slice(7).trim() || null;
+    }
+  }
+
   if (!token) return false;
 
   try {

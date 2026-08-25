@@ -38,6 +38,9 @@ const PUBLIC_API_ROUTE_PREFIXES = [
 // Single routes, public by EXACT path (both spellings) — never by prefix.
 const PUBLIC_API_ROUTES_EXACT = new Set([
   "/api/auth/login",
+  // SPA bearer-token exchange (password → dashboard JWT). Handler enforces its
+  // own password check + lockout — no session exists yet at this point.
+  "/api/auth/token",
   "/api/auth/logout",
   "/api/auth/status",
   "/api/init",
