@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { getToken, clearToken } from "./api/client";
 import { Login } from "./pages/Login";
 import { Keys } from "./pages/Keys";
+import { Providers } from "./pages/Providers";
 import { Models } from "./pages/Models";
+import { Usage } from "./pages/Usage";
 import { Health } from "./pages/Health";
 
 const TABS = {
   "#keys": { label: "API Keys", el: Keys },
+  "#providers": { label: "Providers", el: Providers },
   "#models": { label: "Models", el: Models },
+  "#usage": { label: "Usage", el: Usage },
   "#health": { label: "Health", el: Health },
 } as const;
 
