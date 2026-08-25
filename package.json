@@ -29,14 +29,6 @@
     "check:any-budget:t11": "npm run check:any-budget:t11 --workspace backend",
     "postinstall": "node backend/scripts/build/postinstall.mjs"
   },
-  "lint-staged": {
-    "*.{json,md,yml,yaml,css}": [
-      "prettier --write"
-    ],
-    "*.{js,jsx,ts,tsx,mjs}": [
-      "prettier --write"
-    ]
-  },
   "allowScripts": {
     "better-sqlite3": true,
     "esbuild": true,
