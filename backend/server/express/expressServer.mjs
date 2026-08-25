@@ -16,6 +16,12 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Readable } from "node:stream";
 import express from "express";
+import { AsyncLocalStorage } from "node:async_hooks";
+
+// Request-scoped context bridging Next's cookies()/headers() shims to the
+// Express req/res pair handling the current call.
+const reqCtx = new AsyncLocalStorage();
+globalThis.__OMNIROUTE_REQ_CTX__ = reqCtx;
 
 const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const apiDir = path.join(backendRoot, "src", "app", "api");
@@ -83,7 +89,9 @@ function toWebRequest(req, basePath) {
 
 async function sendResponse(res, response, method) {
   response.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP.has(key.toLowerCase())) res.setHeader(key, value);
+    if (HOP_BY_HOP.has(key.toLowerCase())) return;
+    if (key.toLowerCase() === "set-cookie") res.appendHeader("Set-Cookie", value);
+    else res.setHeader(key, value);
   });
   const bodyless = method === "HEAD" || response.status === 204 || response.status === 304;
   res.statusCode = response.status;
@@ -101,9 +109,13 @@ function makeHandler(module, exportName) {
   const handler = module[exportName];
   if (typeof handler !== "function") return null;
   return async (req, res) => {
+    const store = { cookies: [] };
     try {
-      const request = toWebRequest(req, process.env.OMNIROUTE_BASE_URL ?? "http://localhost");
-      const response = await handler(request);
+      const response = await reqCtx.run({ req, res, ...store }, async () => {
+        const request = toWebRequest(req, process.env.OMNIROUTE_BASE_URL ?? "http://localhost");
+        return await handler(request);
+      });
+      for (const c of store.cookies) res.appendHeader("Set-Cookie", c);
       await sendResponse(res, response, req.method);
     } catch (error) {
       const { sanitizeErrorMessage } = await import(

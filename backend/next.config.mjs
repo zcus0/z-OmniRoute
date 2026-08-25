@@ -640,7 +640,7 @@ const nextConfig = {
   },
 
   async rewrites() {
-    return [
+    const legacy = [
       {
         source: "/chat/completions",
         destination: "/api/v1/chat/completions",
@@ -713,6 +713,28 @@ const nextConfig = {
         destination: "/api/.env",
       },
     ];
+
+    // Frontend-only mode (OMNIROUTE_UI_PROXY=http://host:port): this Next app
+    // serves ONLY the dashboard UI; every API plane is proxied beforeFiles to
+    // the standalone Express backend so UI and API run as separate processes.
+    const uiProxy = process.env.OMNIROUTE_UI_PROXY;
+    if (uiProxy) {
+      return {
+        beforeFiles: [
+          { source: "/api/:path*", destination: `${uiProxy}/api/:path*` },
+          { source: "/v1beta/:path*", destination: `${uiProxy}/v1beta/:path*` },
+          { source: "/v1/:path*", destination: `${uiProxy}/v1/:path*` },
+          { source: "/chat/completions", destination: `${uiProxy}/chat/completions` },
+          { source: "/responses/:path*", destination: `${uiProxy}/responses/:path*` },
+          { source: "/responses", destination: `${uiProxy}/responses` },
+          { source: "/models", destination: `${uiProxy}/models` },
+          { source: "/codex/:path*", destination: `${uiProxy}/codex/:path*` },
+        ],
+        afterFiles: legacy,
+      };
+    }
+
+    return legacy;
   },
 };
 

@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "npm run backend & npm run frontend & wait",
     "backend": "PORT=3001 npm run dev --workspace backend",
-    "frontend": "npm run dev --workspace frontend",
+    "frontend": "OMNIROUTE_UI_PROXY=http://localhost:3001 PORT=5177 npm run dev:next --workspace backend",
     "build": "npm run build --workspace backend",
     "build:backend": "npm run build:backend --workspace backend",
     "start": "npm run start --workspace backend",
