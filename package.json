@@ -14,7 +14,8 @@
   "scripts": {
     "dev": "npm run backend & npm run frontend & wait",
     "backend": "PORT=3001 npm run dev --workspace backend",
-    "frontend": "OMNIROUTE_UI_PROXY=http://localhost:3001 PORT=5177 npm run dev:next --workspace backend",
+    "frontend": "npm run dev --workspace frontend",
+    "ui:next": "OMNIROUTE_UI_PROXY=http://localhost:3001 PORT=5177 npm run dev:next --workspace backend",
     "build": "npm run build --workspace backend",
     "build:backend": "npm run build:backend --workspace backend",
     "start": "npm run start --workspace backend",
@@ -32,12 +33,12 @@
     "postinstall": "node backend/scripts/build/postinstall.mjs"
   },
   "allowScripts": {
-    "better-sqlite3": true,
-    "esbuild": true,
     "@swc/core": true,
     "@parcel/watcher": true,
     "keytar": true,
     "protobufjs": true,
-    "unrs-resolver": true
+    "unrs-resolver": true,
+    "better-sqlite3@13.0.3": true,
+    "esbuild@0.28.1": true
   }
 }
