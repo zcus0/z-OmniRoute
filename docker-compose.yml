@@ -93,8 +93,8 @@ services:
     <<: *common
     container_name: omniroute
     build:
-      context: .
-      target: runner-base
+      context: ./backend
+      target: runner
       args:
         OMNIROUTE_BASE_PATH: ${OMNIROUTE_BASE_PATH:-}
     image: omniroute:base
@@ -113,8 +113,8 @@ services:
     <<: *common
     container_name: omniroute
     build:
-      context: .
-      target: runner-web
+      context: ./backend
+      target: runner
       args:
         OMNIROUTE_BASE_PATH: ${OMNIROUTE_BASE_PATH:-}
     image: omniroute:web
@@ -144,7 +144,7 @@ services:
   # UI port is published to the host.
   chatgpt-web-codex-browser:
     build:
-      context: .
+      context: ./backend
       dockerfile: docker/chatgpt-web-codex-browser/Dockerfile
     image: omniroute:chatgpt-web-codex-browser
     restart: unless-stopped
@@ -159,8 +159,8 @@ services:
     <<: *common
     container_name: omniroute
     build:
-      context: .
-      target: runner-cli
+      context: ./backend
+      target: runner
       args:
         OMNIROUTE_BASE_PATH: ${OMNIROUTE_BASE_PATH:-}
     image: omniroute:cli
@@ -181,8 +181,8 @@ services:
     <<: *common
     container_name: omniroute
     build:
-      context: .
-      target: runner-base
+      context: ./backend
+      target: runner
       args:
         OMNIROUTE_BASE_PATH: ${OMNIROUTE_BASE_PATH:-}
     image: omniroute:base

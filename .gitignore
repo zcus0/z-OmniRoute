@@ -296,3 +296,13 @@ docker-compose.yml.bak
 
 # frontend SPA build artifacts
 frontend/dist/
+
+# Monorepo: backend build artifacts (previously anchored to repo root)
+/backend/output/
+/backend/coverage/
+/backend/data/
+/backend/cloud/
+/backend/.build/
+/backend/dist/
+/backend/.next/
+/backend/node_modules/
