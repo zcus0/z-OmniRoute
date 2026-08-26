@@ -2,22 +2,17 @@
   "name": "omniroute-monorepo",
   "version": "3.8.51",
   "private": true,
-  "description": "OmniRoute monorepo — backend/ (headless API server) + frontend/ (SPA dashboard) + docs/",
+  "description": "OmniRoute monorepo — backend/ (API server + Next.js dashboard) + docs/",
   "type": "module",
   "workspaces": [
-    "backend",
-    "frontend"
+    "backend"
   ],
   "engines": {
     "node": ">=22.22.2 <23 || >=24.0.0 <27"
   },
   "scripts": {
-    "dev": "npm run backend & npm run frontend & wait",
-    "backend": "PORT=3001 npm run dev --workspace backend",
-    "frontend": "OMNIROUTE_UI_PROXY=http://localhost:3001 PORT=5177 npm run dev:next --workspace backend",
-    "ui": "npm run frontend",
-    "ui:next": "npm run frontend",
-    "spa": "npm run dev --workspace frontend",
+    "dev": "npm run dev:next --workspace backend",
+    "backend": "npm run dev:next --workspace backend",
     "build": "npm run build --workspace backend",
     "build:backend": "npm run build:backend --workspace backend",
     "start": "npm run start --workspace backend",

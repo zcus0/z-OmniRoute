@@ -294,8 +294,6 @@ docker-compose.yml.bak
 /.sandbox/
 .aider*
 
-# frontend SPA build artifacts
-frontend/dist/
 
 # Monorepo: backend build artifacts (previously anchored to repo root)
 /backend/output/
